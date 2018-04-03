@@ -148,6 +148,9 @@ void draw() {
           //
           // Currently we take the value x of acc0 and acc1 and use those for amplitude and frequency.
           // The X is multiplied by an arbitrary number 6, because otherwise the sound would be inaudible
+          //
+          // TODO: Come up with something more sensible / robust here
+          // Also try to extend the sound / smoothen transition to get rid of the tut tut tut
           
           float amp = map( acc1.y * 6, 0, height, 1, 0 );
           wave.setAmplitude( amp );
