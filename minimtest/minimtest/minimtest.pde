@@ -52,7 +52,7 @@ void mouseMoved()
   float amp = map( mouseY, 0, height, 1, 0 );
   wave.setAmplitude( amp );
  
-  float freq = map( mouseX, 0, width, 0, 4080 );
+  float freq = map( mouseX, 0, width, 0, 880 );
   wave.setFrequency( freq );
 }
  
@@ -77,6 +77,10 @@ void keyPressed()
       break;
  
     case '5':
+      wave.setWaveform( Waves.QUARTERPULSE );
+      break;
+
+     case '6':
       wave.setWaveform( Waves.QUARTERPULSE );
       break;
  
