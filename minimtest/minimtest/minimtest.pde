@@ -15,13 +15,14 @@ void setup()
   out = minim.getLineOut();
  
   // create a sine wave Oscil, set to 440 Hz, at 0.5 amplitude
-  wave = new Oscil( 440, 0.5f, Waves.SINE );
+//  wave = new Oscil( 440, 0.5f, Waves.SINE );
   // patch the Oscil to the output
-  wave.patch( out );
+//  wave.patch( out );
 }
  
 void draw()
 {
+/*
   background(0);
   stroke(255);
   strokeWeight(1);
@@ -39,7 +40,7 @@ void draw()
   for( int i = 0; i < width-1; ++i )
   {
     point( i, height/2 - (height*0.49) * wave.getWaveform().value( (float)i / width ) );
-  }
+  }*/
 }
  
 void mouseMoved()
@@ -49,13 +50,18 @@ void mouseMoved()
   // but this is a quick and easy way to turn the screen into
   // an x-y control for them.
  
+ out.playNote( 0.0, 0.2, mouseX);
+ //out.playNote( 0.000, 1, new SteadyGrainInstrument( mouseX, mouseY, 1.0, 0.15 ) );
+ /*
   float amp = map( mouseY, 0, height, 1, 0 );
   wave.setAmplitude( amp );
  
   float freq = map( mouseX, 0, width, 0, 880 );
   wave.setFrequency( freq );
+  */
 }
- 
+
+ /*
 void keyPressed()
 { 
   switch( key )
@@ -85,5 +91,39 @@ void keyPressed()
       break;
  
     default: break; 
+  }
+}*/
+
+// Every instrument must implement the Instrument interface so 
+// playNote() can call the instrument's methods.
+class SteadyGrainInstrument implements Instrument
+{
+  // create all variables that must be used throughout the class
+  GranulateSteady chopper;
+  
+  // constructor for this instrument
+  SteadyGrainInstrument( float frequency, float amplitude, float period, float percentOn )
+  { 
+    // create new instances of any UGen objects as necessary
+    // Need the triangle tone to chop up.
+    Oscil toneOsc = new Oscil( frequency, amplitude, Waves.TRIANGLE );
+    // need the GranulateSteady envelope
+    chopper = new GranulateSteady( period*percentOn, period*( 1 - percentOn ), 0.0025 );
+    
+    // patch everything together up to the final output
+    // the tone just goes into the chopper
+    toneOsc.patch( chopper );
+  }
+  
+  // every instrument must have a noteOn( float ) method
+  void noteOn( float dur )
+  {
+    chopper.patch( out );
+  }
+  
+  // every instrument must have a noteOff() method
+  void noteOff()
+  {
+    chopper.unpatch( out );
   }
 }
