@@ -1,0 +1,98 @@
+// clicking somewhere on the window initiates sample playback
+// moving the mouse along y controls the volume 
+// moving mouse along x controls tempo
+import beads.*;
+AudioContext ac;
+SamplePlayer sp1;
+// we can run both SamplePlayers through the same Gain
+Gain sampleGain;
+Glide gainValue;
+Glide rateValue;
+void setup()
+{
+ size(800, 600);
+
+ ac = new AudioContext(); // create our AudioContext
+ // whenever we load a file, we need to enclose
+ // the code in a Try/Catch block
+ // Try/Catch blocks will inform us if the file
+ // can't be found
+ try {
+ // initialize the SamplePlayer
+
+//Users/Mary/Documents/eui/wizard/dnb.mp3
+//Users/Mary/Documents/eui/wizard/foster.mp3
+//Users/Mary/Documents/eui/wizard/toto.mp3
+//Users/Mary/Documents/eui/wizard/mgmt.mp3
+//Users/Mary/Documents/eui/wizard/bloodhound.mp3
+ 
+ sp1 = new SamplePlayer(ac, 
+ new Sample(
+"/Users/Mary/Documents/eui/wizard/mgmt.mp3"));
+ }
+ catch(Exception e)
+ {
+ // if there is an error, show an error message
+ println("Exception while attempting to load sample!");
+ e.printStackTrace();
+ exit();
+ }
+
+ // note that we want to play the sample multiple times
+ sp1.setKillOnEnd(false);
+
+ // initialize our rateValue Glide object
+ rateValue = new Glide(ac, 1, 30);
+ sp1.setRate(rateValue); // connect it to the SamplePlayer
+
+ // creating a gain that will control the
+ // volume of our sample player
+ gainValue = new Glide(ac, 0.0, 30);
+ sampleGain = new Gain(ac, 1, gainValue);
+ sampleGain.addInput(sp1);
+ // connect the Gain to the AudioContext
+ ac.out.addInput(sampleGain);
+ ac.start(); // begin audio processing
+
+ background(0); // set the background to black
+ stroke(255);
+ // draw a line in the middle
+ line(width/2, 0, width/2, height);
+ line(0, height/2, width, height/2);
+ text("Click to begin playback.", 100, 100);
+ text("Move the mouse to control playback speed.",
+ 100, 120);
+ text("left of the line plays it backwards.", 100, 140);
+ text("lower mouse position = louder volume.", 100, 160);
+}
+
+void draw()
+{
+ float halfWidth = width / 2.0;
+ // set the gain (volume) based on mouse position along the Y-axis
+ gainValue.setValue((float)mouseY / (float)height);
+ // set the rate based on mouse position along the X-axis
+ rateValue.setValue(((float)mouseX - halfWidth)/halfWidth);
+}
+// this routine is called whenever a mouse button is
+// pressed on the Processing sketch
+void mousePressed()
+{
+ // if the left mouse button is clicked, then play
+ // the sound
+ if( mouseX > width / 2.0 )
+ {
+ // set the start position to the beginning
+ sp1.setPosition(000);
+ sp1.start(); // play the audio file
+ }
+ // if the right mouse button is clicked, then play the
+ // sample backwards
+ else
+ {
+ // set the start position to the end of the file
+ sp1.setToEnd();
+ // play in reverse (rate set in the draw routine)
+ sp1.start();
+ }
+}
