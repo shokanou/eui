@@ -1,0 +1,80 @@
+//moving mouse along x controls tempo
+import beads.*;
+AudioContext ac;
+String sourceFile;
+// the SamplePlayer class will play the audio file
+SamplePlayer sp;
+Gain g;
+Glide gainValue;
+Glide rateValue;
+void setup()
+{
+ size(800, 600);
+
+ac = new AudioContext(); // create our AudioContext
+ 
+sourceFile = "/Users/Mary/Documents/eui/wizard/toto.mp3";
+
+//some other sound files (replace with what you like)
+//Users/Mary/Documents/eui/wizard/dnb.mp3
+//Users/Mary/Documents/eui/wizard/foster.mp3
+//Users/Mary/Documents/eui/wizard/mgmt.mp3
+//Users/Mary/Documents/eui/wizard/bloodhound.mp3
+
+try{
+sp = new SamplePlayer(ac, 
+     new Sample(
+      sourceFile));
+ }
+
+catch(Exception e)
+{
+  //if there is an error, show an error message
+  println("Exception while attempting to load sample!");
+  e.printStackTrace();
+  exit();
+}
+ 
+// note that we want to play the sample multiple times 
+sp.setKillOnEnd(false);
+
+ // initialize our rateValue Glide object
+rateValue = new Glide(ac, 0, 30);
+sp.setRate(rateValue); // connect it to the SamplePlayer
+
+// creating a gain that will control the
+// volume of our sample player
+gainValue = new Glide(ac, 0.0, 20);
+g = new Gain(ac, 1, gainValue);
+ 
+ g.addInput(sp); // connect the SamplePlayer to the Gain
+ ac.out.addInput(g); // connect the Gain to the AudioContext
+ ac.start(); // begin audio processing
+
+ background(0); // set the background to black
+ stroke(255);
+ line(width/2, 0, width/2, height);
+ text("click to play sample", 100, 100);
+ text("as x increases, tempo increases", 100, 120);
+ text("the line in the middle indicates normal speed", 100, 140);
+}
+
+// Although we're not drawing to the screen, we need to
+// have a draw function in order to wait for
+// mousePressed events.
+void draw(){
+ float halfWidth = width / 2.0;
+ // set the rate based on mouse position along the X-axis
+ rateValue.setValue(((float)mouseX)/halfWidth);
+ //use this if you want less range in rate
+//rateValue.setValue(((float)mouseX/(float)height));
+}
+
+void mousePressed()
+{
+ // set the gain based on mouse position
+ gainValue.setValue((float)mouseX/(float)width);
+ // move the playback pointer to the first loop point (0.0)
+ sp.setToLoopStart();
+ sp.start(); // play the audio file
+} 
