@@ -295,18 +295,10 @@ void oscEvent(OscMessage message)
     float z = message.get(6).floatValue();
 
     myLock.lock();
+    AccelerationSample curr = new AccelerationSample(x, y, z, appId, timeStamp);
+    inputBuffer.add(curr);
     
-      // Loop through all acceleration samples
-  for (int listInd = 0; listInd < dataList.size(); listInd++)
-  {
-    ArrayList<AccelerationSample> data = dataList.get(listInd);
-    if (data.size() > 1)
-    {
-      // Loop through data in acceleration samples
-      for (int i = data.size()-1; i >= 0; i--)
-      {
         boolean changed = false;
-        AccelerationSample curr = data.get(i);
         // Compare curr.time with oldTimes, if difference is greater than 0.5 seconds, start new period
         if (curr.time - oldTimes > 500) {
           //oldAbs = totalCurrAbs;
@@ -334,7 +326,6 @@ void oscEvent(OscMessage message)
     }
   }
     
-    inputBuffer.add(new AccelerationSample(x, y, z, appId, timeStamp));
     myLock.unlock();
     
     return;
