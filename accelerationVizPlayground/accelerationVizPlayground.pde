@@ -47,7 +47,7 @@ void draw() {
   text("Z", 10, (height * 0.5) + tSize);
   text("abs", 10, (height * 0.75) + tSize);
 
-  myLock.lock();
+  /*myLock.lock();
   
   // Checking if the data comes from a known id or new one
   // WTF is data list
@@ -73,12 +73,13 @@ void draw() {
     }
   }
   inputBuffer.clear();
-  myLock.unlock();
+  myLock.unlock();*/
 
 
   // Sorting all data lists
   for (int listInd = 0; listInd < dataList.size(); listInd++)
   {
+    println("sorting");
     ArrayList<AccelerationSample> data = dataList.get(listInd);
   
     Collections.sort(data, new Comparator<AccelerationSample>() {
@@ -104,6 +105,7 @@ void draw() {
   // Removing old data => ???
   for (int listInd = 0; listInd < dataList.size(); listInd++)
   {
+    println("removing");
     ArrayList<AccelerationSample> data = dataList.get(listInd);
     if (data.size() > 1)
     {
@@ -121,6 +123,7 @@ void draw() {
   // Plotting the data
   for (int listInd = 0; listInd < dataList.size(); listInd++)
   {
+    println("plotting");
     ArrayList<AccelerationSample> data = dataList.get(listInd);
     if (data.size() > 1)
     {
@@ -181,6 +184,7 @@ RECEIVING MESSAGES
 
 void initializeReceiving()
 {
+  println("initializeReceiving");
   multicastOsc = new OscP5(this, "239.98.98.1", 10333, OscP5.MULTICAST);
 }
 
@@ -188,8 +192,10 @@ void initializeReceiving()
 /* incoming osc message are forwarded to the oscEvent method. */
 void oscEvent(OscMessage message)
 {
+  println("oscEvent");
   if (message.checkAddrPattern("/fsensync/acc") == true)
   {
+    println("message right");
     int appId = message.get(0).intValue();
     String tags = message.get(1).stringValue();
     int packetNumber = message.get(2).intValue();
@@ -199,11 +205,14 @@ void oscEvent(OscMessage message)
     float z = message.get(6).floatValue();
     
     myLock.lock();
+    println("message right, locked");
     boolean found = false;
     for (int listInd = 0; listInd < dataList.size(); listInd++)
     {
+      println("message received, looping");
       if (dataId.get(listInd) == appId)
       {
+        print("jestem tu");
         found = true;
         float MAx = 0.7*x + lastInput.get(listInd).MAx * 0.3;
         float intx = lastInput.get(listInd).intx;
@@ -211,7 +220,7 @@ void oscEvent(OscMessage message)
         AccelerationSample sample = new AccelerationSample(x, y, z, MAx, intx, appId, timeStamp);
         ArrayList<AccelerationSample> data = dataList.get(listInd);
         data.add(sample);
-        lastInput.set(listInd, sample);
+        //lastInput.set(listInd, sample);
       }
     }
     if (!found)
