@@ -27,7 +27,7 @@ float accMult = 2.0;
 //int hack = 0;
 //int hack2 = 0;
 long totalCurrAbs = 0;
-long oldCurrAbs = 0;
+long oldAbs = 0;
 long oldTimes = 0;
 
 void setup() {
@@ -256,8 +256,8 @@ void draw() {
         // Compare oldAbs and currTotalAbs to see which one is bigger
         // if totalCurrAbs times two, so volume will go up as long as totalCurrAbs is at least half of oldAbs (otherwise keeping volume up would be hard)
           if (totalCurrAbs*2 > oldAbs)
-            volumeUp();
-          else volumeDown();
+            volumeUp(curr.time, totalCurrAbs);
+          else volumeDown(curr.time, totalCurrAbs);
           totalCurrAbs = 0;
         }
         
@@ -344,10 +344,10 @@ class SteadyGrainInstrument implements Instrument
   }
 }*/
 
-void volumeUp() {
-  println("Volume UP");
+void volumeUp(long t, long a) {
+  println("Volume UP: time: " + t + " acceleration: " + a);
 }
 
-void volumeDown() {
-  println("Volume DOWN");
+void volumeDown(long t, long a) {
+  println("Volume DOWN: time: " + t + " acceleration: " + a);
 }
