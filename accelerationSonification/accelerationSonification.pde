@@ -245,7 +245,7 @@ void draw() {
         AccelerationSample curr = data.get(i);
         // Compare curr.time with oldTimes, if difference is greater than 0.5 seconds, start new period
         if (curr.time - oldTimes > 5000) {
-          oldAbs = totalCurrAbs;
+          //oldAbs = totalCurrAbs;
           oldTimes = curr.time;
           //totalCurrAbs = 0;
           changed = true;
@@ -258,6 +258,7 @@ void draw() {
           if (totalCurrAbs*2 > oldAbs)
             volumeUp(curr.time, totalCurrAbs, oldAbs);
           else volumeDown(curr.time, totalCurrAbs, oldAbs);
+          oldAbs = totalCurrAbs;
           totalCurrAbs = 0;
         }
         
