@@ -298,7 +298,7 @@ void oscEvent(OscMessage message)
 
     myLock.lock();
     AccelerationSample curr = new AccelerationSample(x, y, z, appId, timeStamp);
-    //inputBuffer.add(curr);
+    inputBuffer.add(curr);
     
         boolean changed = false;
         // Compare curr.time with oldTimes, if difference is greater than 0.5 seconds, start new period
