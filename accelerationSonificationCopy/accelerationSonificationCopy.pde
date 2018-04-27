@@ -20,6 +20,10 @@ ArrayList<Integer> dataId;
 
 MyLock myLock;
 ArrayList<AccelerationSample> inputBuffer;
+ArrayList<AccelerationSample> take5;
+
+float lastT;
+float freq;
 
 float plottedMs = 15000.0;
 float accMult = 2.0;
@@ -46,6 +50,10 @@ void setup() {
 
   myLock = new MyLock();
   inputBuffer = new ArrayList<AccelerationSample>();
+  take5 = new ArrayList<AccelerationSample>();
+  
+  lastT = 0;
+  freq = 0;
   
   dataList = new ArrayList<ArrayList<AccelerationSample>>();
   dataId = new ArrayList<Integer>();
@@ -298,9 +306,19 @@ void oscEvent(OscMessage message)
     AccelerationSample curr = new AccelerationSample(x, y, z, appId, timeStamp);
     inputBuffer.add(curr);
     
+    take5.add(curr);
+    // do only when we have already 5 samples
+    if (take5.size() == 5){
+      AccelerationSample t1 = take5.get(0);
+      AccelerationSample t2 = take5.get(1);
+      AccelerationSample t3 = take5.get(2);
+      AccelerationSample t4 = take5.get(3);
+      AccelerationSample t5 = take5.get(4);
+      
+    }
         boolean changed = false;
         // Compare curr.time with oldTimes, if difference is greater than 0.5 seconds, start new period
-        if (curr.time - oldTimes > 500) {
+        if (curr.time - oldTimes > 200) {
           //oldAbs = totalCurrAbs;
           oldTimes = curr.time;
           //totalCurrAbs = 0;
@@ -322,6 +340,7 @@ void oscEvent(OscMessage message)
         //get total acceleration for current data by adding the abs acc of each AccelerationSample together
         float currAbs = (float)Math.sqrt((curr.x * curr.x) + (curr.y * curr.y) + (curr.z * curr.z)); 
         totalCurrAbs += currAbs;
+        println(totalCurrAbs);
     
     myLock.unlock();
     
@@ -333,46 +352,6 @@ void oscEvent(OscMessage message)
     return;
   }
 }
-
-void mouseMoved()
-{
-  //out.playNote(0.0 , 0.2 , mouseX);
-}
-
-/*
-// Every instrument must implement the Instrument interface so 
-// playNote() can call the instrument's methods.
-class SteadyGrainInstrument implements Instrument
-{
-  // create all variables that must be used throughout the class
-  GranulateSteady chopper;
-  
-  // constructor for this instrument
-  SteadyGrainInstrument( float frequency, float amplitude, float period, float percentOn )
-  { 
-    // create new instances of any UGen objects as necessary
-    // Need the triangle tone to chop up.
-    Oscil toneOsc = new Oscil( frequency, amplitude, Waves.TRIANGLE );
-    // need the GranulateSteady envelope
-    chopper = new GranulateSteady( period*percentOn, period*( 1 - percentOn ), 0.0025 );
-    
-    // patch everything together up to the final output
-    // the tone just goes into the chopper
-    toneOsc.patch( chopper );
-  }
-  
-  // every instrument must have a noteOn( float ) method
-  void noteOn( float dur )
-  {
-    chopper.patch( out );
-  }
-  
-  // every instrument must have a noteOff() method
-  void noteOff()
-  {
-    chopper.unpatch( out );
-  }
-}*/
 
 void volumeUp(long t, long a, long o) {
   println("Volume UP: time: " + t + " acceleration: " + a + " old acc: " + o);
