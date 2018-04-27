@@ -2,6 +2,7 @@ import oscP5.*;
 import netP5.*;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 // Minim
 import ddf.minim.*;
@@ -26,9 +27,10 @@ float accMult = 2.0;
 
 //int hack = 0;
 //int hack2 = 0;
-long totalCurrAbs = 0;
+float totalCurrAbs = 0;
 long oldAbs = 0;
 long oldTimes = 0;
+List<Float> currAbsValues = new ArrayList<Float>();
 
 void setup() {
   size(1200, 600,P3D);
@@ -296,35 +298,46 @@ void oscEvent(OscMessage message)
 
     myLock.lock();
     AccelerationSample curr = new AccelerationSample(x, y, z, appId, timeStamp);
-    inputBuffer.add(curr);
+    //inputBuffer.add(curr);
     
         boolean changed = false;
         // Compare curr.time with oldTimes, if difference is greater than 0.5 seconds, start new period
-        if (curr.time - oldTimes > 500) {
+        if (curr.time - oldTimes > 1000) {
           //oldAbs = totalCurrAbs;
           oldTimes = curr.time;
           //totalCurrAbs = 0;
           changed = true;
         }
-        
+
+        if (changed) {
+          for (float currAbsValue : currAbsValues) {
+            totalCurrAbs += currAbsValue;
+          }
+          float avgCurrAbs = totalCurrAbs / currAbsValues.size();
+          volumeAvg(curr.time, avgCurrAbs);
+          totalCurrAbs = 0;
+        }
+
+        /*
         // If new period was started above
         if(changed){
         // Compare oldAbs and currTotalAbs to see which one is bigger
         // if totalCurrAbs times two, so volume will go up as long as totalCurrAbs is at least half of oldAbs (otherwise keeping volume up would be hard)
-          if (totalCurrAbs > oldAbs * 1.3)
+          if (totalCurrAbs > oldAbs * 1.2)
             volumeUp(curr.time, totalCurrAbs, oldAbs);
-          else volumeDown(curr.time, totalCurrAbs, oldAbs);
+          else if (totalCurrAbs < oldAbs*0.8)
+            volumeDown(curr.time, totalCurrAbs, oldAbs);
+          else volumeNeutral(curr.time, totalCurrAbs, oldAbs);
           oldAbs = totalCurrAbs;
           totalCurrAbs = 0;
         }
-        
+        */
         // TODO: After comparing timestamps, seing if period has changed, do what?
         //get total acceleration for current data by adding the abs acc of each AccelerationSample together
         float currAbs = (float)Math.sqrt((curr.x * curr.x) + (curr.y * curr.y) + (curr.z * curr.z)); 
-        totalCurrAbs += currAbs;
-      }
-    }
-  }
+        //totalCurrAbs += currAbs;
+        // put currAbs into an array
+        currAbsValues.add(currAbs);
     
     myLock.unlock();
     
@@ -379,10 +392,20 @@ class SteadyGrainInstrument implements Instrument
 
 void volumeUp(long t, long a, long o) {
   println("Volume UP: time: " + t + " acceleration: " + a + " old acc: " + o);
-  out.playNote(200);
+  out.playNote(300);
 }
 
 void volumeDown(long t, long a, long o) {
   println("Volume DOWN: time: " + t + " acceleration: " + a + " old acc: " + o);
   out.playNote(100);
+}
+
+void volumeNeutral(long t, long a, long o) {
+  println("Volume Neutral: time: " + t + " acceleration: " + a + " old acc: " + o);
+  out.playNote(200);
+}
+
+void volumeAvg(long t, float a) {
+  println("Volume Neutral: time: " + t + " acceleration: " + a);
+  //out.playNote(0,0.01,a*10);
 }
