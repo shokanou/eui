@@ -24,8 +24,11 @@ ArrayList<AccelerationSample> inputBuffer;
 float plottedMs = 15000.0;
 float accMult = 2.0;
 
-int hack = 0;
-int hack2 = 0;
+//int hack = 0;
+//int hack2 = 0;
+long totalCurrAbs = 0;
+long oldCurrAbs = 0;
+long oldTimes = 0;
 
 void setup() {
   size(1200, 600,P3D);
@@ -206,9 +209,31 @@ void draw() {
   // -> -> if greater, volume up, else volume down
   // current period becomes old period, begin new period
   
-  //get total acceleration for current data
+  // ------------
+  // Okay. We've oldTimes for the previous timestamp when we started a new period
+  // We also have totalCurrAbs for total current absolute acceleration and oldAbs for the totalCurrAbs of the previous period
+  // We also have boolean changed to track whether we've started a new period
+  // If the diff between oldTimes and curr.time (data.get(i).time) > 0.5 seconds
+  //    - oldAbs = totalCurrAbs;
+  //    - oldTimes = curr.time;
+  //    - totalCurrAbs = 0; // NOT here yet!
+  //    - changed = true;
+
+  
+  // if(changed){
+     // Compare oldAbs and currTotalAbs to see which one is bigger
+     // if totalCurrAbs times two, so volume will go up as long as totalCurrAbs is at least half of oldAbs (otherwise keeping volume up would be hard)
+     //if (totalCurrAbs*2 > oldAbs)
+     //  volumeUp();
+     //else volumeDown();
+     //totalCurrAbs = 0;
+  //}
+  
+  
+  //long totalCurrAbs = 0;
+  // Set changed to false.
+  boolean changed = false;
   // Loop through all acceleration samples
-  long totalAbs = 0;
   for (int listInd = 0; listInd < dataList.size(); listInd++)
   {
     ArrayList<AccelerationSample> data = dataList.get(listInd);
@@ -218,11 +243,32 @@ void draw() {
       for (int i = data.size()-1; i >= 0; i--)
       {
         AccelerationSample curr = data.get(i);
+        // Compare curr.time with oldTimes, if difference is greater than 0.5 seconds, start new period
+        if (curr.time - oldTimes > 500) {
+          oldAbs = totalCurrAbs;
+          oldTimes = curr.time;
+          //totalCurrAbs = 0;
+          changed = true;
+        }
+        
+        // If new period was started above
+        if(changed){
+        // Compare oldAbs and currTotalAbs to see which one is bigger
+        // if totalCurrAbs times two, so volume will go up as long as totalCurrAbs is at least half of oldAbs (otherwise keeping volume up would be hard)
+          if (totalCurrAbs*2 > oldAbs)
+            volumeUp();
+          else volumeDown();
+          totalCurrAbs = 0;
+        }
+        
+        // TODO: After comparing timestamps, seing if period has changed, do what?
+        //get total acceleration for current data by adding the abs acc of each AccelerationSample together
         float currAbs = (float)Math.sqrt((curr.x * curr.x) + (curr.y * curr.y) + (curr.z * curr.z)); 
-        totalAbs += currAbs;
+        totalCurrAbs += currAbs;
       }
     }
   }
+  
   
   // half second increment end
 }
@@ -263,6 +309,7 @@ void mouseMoved()
   //out.playNote(0.0 , 0.2 , mouseX);
 }
 
+/*
 // Every instrument must implement the Instrument interface so 
 // playNote() can call the instrument's methods.
 class SteadyGrainInstrument implements Instrument
@@ -295,4 +342,12 @@ class SteadyGrainInstrument implements Instrument
   {
     chopper.unpatch( out );
   }
+}*/
+
+void volumeUp() {
+  println("Volume UP");
+}
+
+void volumeDown() {
+  println("Volume DOWN");
 }
