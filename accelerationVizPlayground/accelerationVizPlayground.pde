@@ -75,7 +75,7 @@ void draw() {
   inputBuffer.clear();
   myLock.unlock();*/
 
-
+myLock.lock();
   // Sorting all data lists
   for (int listInd = 0; listInd < dataList.size(); listInd++)
   {
@@ -174,7 +174,7 @@ void draw() {
       }
     }
   }
-  
+  myLock.unlock();
 }
 
 
