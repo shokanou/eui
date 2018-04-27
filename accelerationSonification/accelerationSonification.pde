@@ -244,7 +244,7 @@ void draw() {
       {
         AccelerationSample curr = data.get(i);
         // Compare curr.time with oldTimes, if difference is greater than 0.5 seconds, start new period
-        if (curr.time - oldTimes > 500) {
+        if (curr.time - oldTimes > 5000) {
           oldAbs = totalCurrAbs;
           oldTimes = curr.time;
           //totalCurrAbs = 0;
@@ -256,8 +256,8 @@ void draw() {
         // Compare oldAbs and currTotalAbs to see which one is bigger
         // if totalCurrAbs times two, so volume will go up as long as totalCurrAbs is at least half of oldAbs (otherwise keeping volume up would be hard)
           if (totalCurrAbs*2 > oldAbs)
-            volumeUp(curr.time, totalCurrAbs);
-          else volumeDown(curr.time, totalCurrAbs);
+            volumeUp(curr.time, totalCurrAbs, oldAbs);
+          else volumeDown(curr.time, totalCurrAbs, oldAbs);
           totalCurrAbs = 0;
         }
         
@@ -344,10 +344,10 @@ class SteadyGrainInstrument implements Instrument
   }
 }*/
 
-void volumeUp(long t, long a) {
-  println("Volume UP: time: " + t + " acceleration: " + a);
+void volumeUp(long t, long a, long o) {
+  println("Volume UP: time: " + t + " acceleration: " + a + " old acc: " + o);
 }
 
-void volumeDown(long t, long a) {
-  println("Volume DOWN: time: " + t + " acceleration: " + a);
+void volumeDown(long t, long a, long o) {
+  println("Volume DOWN: time: " + t + " acceleration: " + a + " old acc: " + o);
 }
