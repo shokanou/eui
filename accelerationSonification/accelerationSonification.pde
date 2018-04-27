@@ -232,7 +232,8 @@ void draw() {
   
   //long totalCurrAbs = 0;
   // Set changed to false.
-  boolean changed = false;
+  //boolean changed = false;
+  /*
   // Loop through all acceleration samples
   for (int listInd = 0; listInd < dataList.size(); listInd++)
   {
@@ -242,9 +243,10 @@ void draw() {
       // Loop through data in acceleration samples
       for (int i = data.size()-1; i >= 0; i--)
       {
+        boolean changed = false;
         AccelerationSample curr = data.get(i);
         // Compare curr.time with oldTimes, if difference is greater than 0.5 seconds, start new period
-        if (curr.time - oldTimes > 5000) {
+        if (curr.time - oldTimes > 500) {
           //oldAbs = totalCurrAbs;
           oldTimes = curr.time;
           //totalCurrAbs = 0;
@@ -255,7 +257,7 @@ void draw() {
         if(changed){
         // Compare oldAbs and currTotalAbs to see which one is bigger
         // if totalCurrAbs times two, so volume will go up as long as totalCurrAbs is at least half of oldAbs (otherwise keeping volume up would be hard)
-          if (totalCurrAbs*2 > oldAbs)
+          if (totalCurrAbs > oldAbs * 1.5)
             volumeUp(curr.time, totalCurrAbs, oldAbs);
           else volumeDown(curr.time, totalCurrAbs, oldAbs);
           oldAbs = totalCurrAbs;
@@ -268,7 +270,7 @@ void draw() {
         totalCurrAbs += currAbs;
       }
     }
-  }
+  }*/
   
   
   // half second increment end
@@ -293,6 +295,45 @@ void oscEvent(OscMessage message)
     float z = message.get(6).floatValue();
 
     myLock.lock();
+    
+      // Loop through all acceleration samples
+  for (int listInd = 0; listInd < dataList.size(); listInd++)
+  {
+    ArrayList<AccelerationSample> data = dataList.get(listInd);
+    if (data.size() > 1)
+    {
+      // Loop through data in acceleration samples
+      for (int i = data.size()-1; i >= 0; i--)
+      {
+        boolean changed = false;
+        AccelerationSample curr = data.get(i);
+        // Compare curr.time with oldTimes, if difference is greater than 0.5 seconds, start new period
+        if (curr.time - oldTimes > 500) {
+          //oldAbs = totalCurrAbs;
+          oldTimes = curr.time;
+          //totalCurrAbs = 0;
+          changed = true;
+        }
+        
+        // If new period was started above
+        if(changed){
+        // Compare oldAbs and currTotalAbs to see which one is bigger
+        // if totalCurrAbs times two, so volume will go up as long as totalCurrAbs is at least half of oldAbs (otherwise keeping volume up would be hard)
+          if (totalCurrAbs > oldAbs * 1.3)
+            volumeUp(curr.time, totalCurrAbs, oldAbs);
+          else volumeDown(curr.time, totalCurrAbs, oldAbs);
+          oldAbs = totalCurrAbs;
+          totalCurrAbs = 0;
+        }
+        
+        // TODO: After comparing timestamps, seing if period has changed, do what?
+        //get total acceleration for current data by adding the abs acc of each AccelerationSample together
+        float currAbs = (float)Math.sqrt((curr.x * curr.x) + (curr.y * curr.y) + (curr.z * curr.z)); 
+        totalCurrAbs += currAbs;
+      }
+    }
+  }
+    
     inputBuffer.add(new AccelerationSample(x, y, z, appId, timeStamp));
     myLock.unlock();
     
@@ -347,8 +388,10 @@ class SteadyGrainInstrument implements Instrument
 
 void volumeUp(long t, long a, long o) {
   println("Volume UP: time: " + t + " acceleration: " + a + " old acc: " + o);
+  out.playNote(200);
 }
 
 void volumeDown(long t, long a, long o) {
   println("Volume DOWN: time: " + t + " acceleration: " + a + " old acc: " + o);
+  out.playNote(100);
 }
