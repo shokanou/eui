@@ -3,14 +3,13 @@ import netP5.*;
 import java.util.Collections;
 import java.util.Comparator;
 
-// Minim stuff
+// Minim
 import ddf.minim.*;
 import ddf.minim.ugens.*;
- 
+
 Minim       minim;
 AudioOutput out;
-Oscil       wave;
-// Minim stuff
+// Minim
 
 OscP5 oscP5;
 OscMessage myMessage;
@@ -20,31 +19,36 @@ ArrayList<ArrayList<AccelerationSample>> dataList;
 ArrayList<Integer> dataId;
 
 MyLock myLock;
+ArrayList<AccelerationSample> inputBuffer;
 
 float plottedMs = 15000.0;
 float accMult = 2.0;
 
+int hack = 0;
+int hack2 = 0;
+
 void setup() {
-  size(1200, 800);
+  size(1200, 600,P3D);
   frameRate(30);
-
-  myLock = new MyLock();
-  dataList = new ArrayList<ArrayList<AccelerationSample>>();
-  dataId = new ArrayList<Integer>();
-
-  oscP5 = new OscP5(this, 8000);
-  initializeReceiving();
   
-  // Minim initialize
+  // Minim init
   minim = new Minim(this);
  
   // use the getLineOut method of the Minim object to get an AudioOutput object
   out = minim.getLineOut();
- 
-  // create a sine wave Oscil, set to 440 Hz, at 0.5 amplitude
-  wave = new Oscil( 440, 0.5f, Waves.SINE );
-  // patch the Oscil to the output
-  wave.patch( out );
+  // Minim init end
+
+  // The following is needed for Macs to get the Multicast
+  System.setProperty("java.net.preferIPv4Stack" , "true");
+
+  myLock = new MyLock();
+  inputBuffer = new ArrayList<AccelerationSample>();
+  
+  dataList = new ArrayList<ArrayList<AccelerationSample>>();
+  dataId = new ArrayList<Integer>();
+
+  oscP5 = new OscP5(this, 7018);
+  initializeReceiving();
 }
 
 void draw() {
@@ -60,7 +64,30 @@ void draw() {
   text("abs", 10, (height * 0.75) + tSize);
 
   myLock.lock();
-  
+  for (int i = 0; i < inputBuffer.size(); i++)
+  {
+    AccelerationSample sample = inputBuffer.get(i);
+    boolean found = false;
+    for (int listInd = 0; listInd < dataList.size(); listInd++)
+    {
+      if (dataId.get(listInd) == sample.id)
+      {
+        found = true;
+        ArrayList<AccelerationSample> data = dataList.get(listInd);
+        data.add(sample);
+      }
+    }
+    if (!found)
+    {
+      ArrayList<AccelerationSample> data = new ArrayList<AccelerationSample>();
+      data.add(sample);
+      dataId.add(sample.id);
+      dataList.add(data);
+    }
+  }
+  inputBuffer.clear();
+  myLock.unlock();
+
   // Sorting all data lists
   for (int listInd = 0; listInd < dataList.size(); listInd++)
   {
@@ -106,7 +133,7 @@ void draw() {
   {
     ArrayList<AccelerationSample> data = dataList.get(listInd);
     if (data.size() > 1)
-    {
+    { 
       stroke((15*listInd) % 100, 100, 100);
       
       long xStart = maxTime - (maxTime % 5000) + 5000;
@@ -115,7 +142,29 @@ void draw() {
       {
         AccelerationSample acc0 = data.get(i-1);
         AccelerationSample acc1 = data.get(i);
-       
+        // Minim create sound
+        // Normalize abs1 to range of 0-10
+//          int norm  = int(abs1 / 70 * 10); 
+//          println(norm);
+        
+//        hack = hack + 1;
+//        hack2 = hack2+1;
+//        println(acc1.x);
+        
+//        if(hack == 100){
+          //out.playNote( 0.0, 0.2, hack2*0.1);
+//            out.playNote(norm*10);
+//            out.playNote( 0.000, 1, new SteadyGrainInstrument( abs1*10, 10, 1.0, 0.15 ) );
+//          out.playNote(0, 0.2, 100+acc1.x);
+//          hack = 0;
+//        }
+//          if(hack2 == 10000)
+//          {
+//            hack2 = 0;
+//          }
+        // Minim
+
+
         if (acc1.time - acc0.time < 1000)
         {
           line(width - ((xStart - acc0.time) / plottedMs * width),
@@ -140,32 +189,42 @@ void draw() {
                 ((-abs0 + 10.0) * accMult) + (height * 0.875), 
                 width - ((xStart - acc1.time)  / plottedMs * width), 
                 ((-abs1 + 10.0) * accMult) + (height * 0.875));
-
-          // Instead of setting these at mouseMoved() like in minimtest, we do it here
-          // Obs! I think acc0 refers to the previous value the accelerometer gave us
-          // and acc1 to the most recent ones - there's two for drawing lines between them
-          // abs0 and abs1 seem to be the acceleration
-          //
-          // Currently we take the value x of acc0 and acc1 and use those for amplitude and frequency.
-          // The X is multiplied by an arbitrary number 6, because otherwise the sound would be inaudible
-          //
-          // TODO: Come up with something more sensible / robust here
-          // Also try to extend the sound / smoothen transition to get rid of the tut tut tut
-          
-          float amp = map( acc1.y * 6, 0, height, 1, 0 );
-          wave.setAmplitude( amp );
-         
-          float freq = map( abs1 * 6, 0, width, 0, 4080 );
-          wave.setFrequency( freq );
-          
-          // Minim hackiness ends
         }
       }
     }
+  }
+  // Get half second increments of data
+  // Save total(or avg?) absolute acceleration of current dataList
+  //    currPeriodTotal += abs;
+  // Save maxTime of dataList
+  // Compare maxTime with previous maxTime
+  // -> if diff <half second, add abs acceleration to period total (or avg)
+  // if greater, save period
   
+  // If two periods saved (if prevPeriodTotal > 0)
+  // -> Compare period total / avg acceleration
+  // -> -> if greater, volume up, else volume down
+  // current period becomes old period, begin new period
+  
+  //get total acceleration for current data
+  // Loop through all acceleration samples
+  long totalAbs = 0;
+  for (int listInd = 0; listInd < dataList.size(); listInd++)
+  {
+    ArrayList<AccelerationSample> data = dataList.get(listInd);
+    if (data.size() > 1)
+    {
+      // Loop through data in acceleration samples
+      for (int i = data.size()-1; i >= 0; i--)
+      {
+        AccelerationSample curr = data.get(i);
+        float currAbs = (float)Math.sqrt((curr.x * curr.x) + (curr.y * curr.y) + (curr.z * curr.z)); 
+        totalAbs += currAbs;
+      }
+    }
   }
   
-  myLock.unlock();
+  // half second increment end
 }
 
 void initializeReceiving()
@@ -181,31 +240,15 @@ void oscEvent(OscMessage message)
     int appId = message.get(0).intValue();
     String tags = message.get(1).stringValue();
     int packetNumber = message.get(2).intValue();
-    long timeStamp = message.get(3).longValue();
+    int timeStamp = message.get(3).intValue();
     float x = message.get(4).floatValue();
     float y = message.get(5).floatValue();
     float z = message.get(6).floatValue();
 
     myLock.lock();
-    boolean found = false;
-    for (int listInd = 0; listInd < dataList.size(); listInd++)
-    {
-      if (dataId.get(listInd) == appId)
-      {
-        found = true;
-        ArrayList<AccelerationSample> data = dataList.get(listInd);
-        data.add(new AccelerationSample(x, y, z, appId, timeStamp));
-      }
-    }
-    if (!found)
-    {
-      ArrayList<AccelerationSample> data = new ArrayList<AccelerationSample>();
-      data.add(new AccelerationSample(x, y, z, appId, timeStamp));
-      dataId.add(appId);
-      dataList.add(data);
-    }
+    inputBuffer.add(new AccelerationSample(x, y, z, appId, timeStamp));
     myLock.unlock();
-
+    
     return;
   }
 
@@ -215,31 +258,41 @@ void oscEvent(OscMessage message)
   }
 }
 
-// This is for changing the sound like what minim provides in the example
-void keyPressed()
-{ 
-  switch( key )
+void mouseMoved()
+{
+  //out.playNote(0.0 , 0.2 , mouseX);
+}
+
+// Every instrument must implement the Instrument interface so 
+// playNote() can call the instrument's methods.
+class SteadyGrainInstrument implements Instrument
+{
+  // create all variables that must be used throughout the class
+  GranulateSteady chopper;
+  
+  // constructor for this instrument
+  SteadyGrainInstrument( float frequency, float amplitude, float period, float percentOn )
+  { 
+    // create new instances of any UGen objects as necessary
+    // Need the triangle tone to chop up.
+    Oscil toneOsc = new Oscil( frequency, amplitude, Waves.TRIANGLE );
+    // need the GranulateSteady envelope
+    chopper = new GranulateSteady( period*percentOn, period*( 1 - percentOn ), 0.0025 );
+    
+    // patch everything together up to the final output
+    // the tone just goes into the chopper
+    toneOsc.patch( chopper );
+  }
+  
+  // every instrument must have a noteOn( float ) method
+  void noteOn( float dur )
   {
-    case '1': 
-      wave.setWaveform( Waves.SINE );
-      break;
- 
-    case '2':
-      wave.setWaveform( Waves.TRIANGLE );
-      break;
- 
-    case '3':
-      wave.setWaveform( Waves.SAW );
-      break;
- 
-    case '4':
-      wave.setWaveform( Waves.SQUARE );
-      break;
- 
-    case '5':
-      wave.setWaveform( Waves.QUARTERPULSE );
-      break;
- 
-    default: break; 
+    chopper.patch( out );
+  }
+  
+  // every instrument must have a noteOff() method
+  void noteOff()
+  {
+    chopper.unpatch( out );
   }
 }
