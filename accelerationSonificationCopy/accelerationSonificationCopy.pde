@@ -30,11 +30,14 @@ float plottedMs = 15000.0;
 float accMult = 2.0;
 
 float totalCurrAbs = 0;
+ArrayList<Float> totalAccs;
 int N = 0;
+ArrayList<Integer> totalNs;
+ArrayList<Integer> oldTimes;
 
 int counter = 0;
 long oldAbs = 0;
-long oldTimes = 0;
+long oldTime = 0;
 
 
 
@@ -52,14 +55,15 @@ void setup() {
   
   dataList = new ArrayList<ArrayList<AccelerationSample>>();
   dataId = new ArrayList<Integer>();
-
+  totalAccs = new ArrayList<Float>();
+  totalNs = new ArrayList<Integer>(); 
   
   // UPLOADING SONG FILE
   ac = new AudioContext();
   try {
     println("tried to upload");
     song = new SamplePlayer(ac, new Sample("/Users/VilleVartiainen/Documents/lipasto/emergent/eui/accelerationSonificationCopy/toto.mp3"));
-    //noise = new SamplePlayer(ac, new Sample("/Users/VilleVartiainen/Documents/lipasto/emergent/eui/accelerationSonificationCopy/toto.mp3"));
+    noise = new SamplePlayer(ac, new Sample("/Users/VilleVartiainen/Documents/lipasto/emergent/eui/accelerationSonificationCopy/whitenoise.mp3"));
     println("Song uploaded");
   }
   catch(Exception e)
@@ -84,15 +88,14 @@ void setup() {
    sampleGain = new Gain(ac, 1, gainValue);
    sampleGain.addInput(song);
    
-   /*
    // creating a gain that will control the volume of noise
    noiseValue = new Glide(ac, 0.0, thGain);
    noiseGain = new Gain(ac, 1, noiseValue);
    noiseGain.addInput(noise);
-   */
+   
    // connect Gains to the AudioContext
    ac.out.addInput(sampleGain);
-   //ac.out.addInput(noiseGain);
+   ac.out.addInput(noiseGain);
    ac.start(); // begin audio processing
    println("music stuff initialized");
    song.setPosition(000);
@@ -153,25 +156,40 @@ void oscEvent(OscMessage message)
   
       myLock.lock();
       AccelerationSample curr = new AccelerationSample(x, y, z, appId, timeStamp);
+     float currAbs = (float)Math.sqrt((curr.x * curr.x) + (curr.y * curr.y) + (curr.z * curr.z)); 
+      
+      // CHECKING IF WE HAVE ALREADY THE ID
+      boolean found = false;
+      
+      for (int listInd = 0; listInd < totalAccs.size(); listInd++)
+      {
+        if (dataId.get(listInd) == curr.id)
+        {
+          found = true;
+          
+          // Compare curr.time with oldTimes, if difference is greater than 0.5 seconds, start new period
+          if (curr.time - oldTimes.get(listInd) > 1000) {
+            oldTimes.set(listInd, int(curr.time));
+            setThatThingy(curr.id, curr.time, totalAccs.get(listInd), totalNs.get(listInd));
+            totalAccs.set(listInd, 0.0);
+            totalNs.set(listInd, 0);
+          }
+          
+          currAbs += totalAccs.get(listInd);
+          totalAccs.set(listInd, currAbs);
+          N = totalNs.get(listInd);
+          totalNs.et(listInd, N+1);
+        }
+      }
+      if (!found)
+      {
+        dataId.add(curr.id);
+        totalAccs.add(currAbs);
+        totalNs.add(0);
+      }
           
       boolean changed = false;
       
-      // Compare curr.time with oldTimes, if difference is greater than 0.5 seconds, start new period
-      if (curr.time - oldTimes > 1000) {
-        oldTimes = curr.time;
-        changed = true;
-      }
-
-      if (changed) {
-        setThatThingy(curr.id, curr.time, totalCurrAbs, N);
-        totalCurrAbs = 0;
-        N=0;
-      }
-      
-      //get total acceleration for current data by adding the abs acc of each AccelerationSample together
-      float currAbs = (float)Math.sqrt((curr.x * curr.x) + (curr.y * curr.y) + (curr.z * curr.z)); 
-      totalCurrAbs += currAbs;
-      N+=1;
       
       myLock.unlock();
       
