@@ -57,8 +57,8 @@ void setup() {
   // UPLOADING SONG FILE
   ac = new AudioContext();
   try {
-    song = new SamplePlayer(ac, new Sample("/Users/Mary/Documents/eui/wizard/mgmt.mp3"));
-    noise = new SamplePlayer(ac, new Sample("/Users/Mary/Documents/eui/wizard/toto.mp3"));
+    song = new SamplePlayer(ac, new Sample("/mgmt.mp3"));
+    noise = new SamplePlayer(ac, new Sample("~/toto.mp3"));
     println("Song uploaded");
   }
   catch(Exception e)
@@ -185,6 +185,4 @@ void setVolume(SamplePlayer sp, long t, float ta, int N) {
   //TO DO: what is the maximum avg? 
   a /= thGain;
    
-  
-  
 }
