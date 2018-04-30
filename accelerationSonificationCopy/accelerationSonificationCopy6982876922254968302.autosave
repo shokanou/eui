@@ -57,9 +57,8 @@ void setup() {
   // UPLOADING SONG FILE
   ac = new AudioContext();
   try {
-    println("tried to upload");
-    song = new SamplePlayer(ac, new Sample("/Users/VilleVartiainen/Documents/lipasto/emergent/eui/accelerationSonificationCopy/mgmt.mp3"));
-    //noise = new SamplePlayer(ac, new Sample("/Users/VilleVartiainen/Documents/lipasto/emergent/eui/accelerationSonificationCopy/toto.mp3"));
+    song = new SamplePlayer(ac, new Sample("/Users/Mary/Documents/eui/wizard/mgmt.mp3"));
+    noise = new SamplePlayer(ac, new Sample("/Users/Mary/Documents/eui/wizard/toto.mp3"));
     println("Song uploaded");
   }
   catch(Exception e)
@@ -72,9 +71,8 @@ void setup() {
    
    // FOR MUSIC CONTROL
    // play the sample multiple times
-   println("Song uploaded - after try");
    song.setKillOnEnd(false);
-   //noise.setKillOnEnd(false);
+   noise.setKillOnEnd(false);
    
    thGain = 30;
    // initialize our rateValue Glide object
@@ -84,16 +82,13 @@ void setup() {
    gainValue = new Glide(ac, 0.0, thGain);
    sampleGain = new Gain(ac, 1, gainValue);
    sampleGain.addInput(song);
-   
-   /*
    // creating a gain that will control the volume of noise
    noiseValue = new Glide(ac, 0.0, thGain);
    noiseGain = new Gain(ac, 1, noiseValue);
    noiseGain.addInput(noise);
-   */
    // connect Gains to the AudioContext
    ac.out.addInput(sampleGain);
-   //ac.out.addInput(noiseGain);
+   ac.out.addInput(noiseGain);
    ac.start(); // begin audio processing
 }
 
@@ -122,7 +117,7 @@ void initializeReceiving()
 void startPlaying()
 {
   song.start();
-  //noise.start();
+  noise.start();
 }
 
 
@@ -158,7 +153,7 @@ void oscEvent(OscMessage message)
       }
 
       if (changed) {
-        setVolume(song, curr.time, totalCurrAbs, N);
+        setVolume(curr.time, totalCurrAbs, N);
         totalCurrAbs = 0;
         N=0;
       }
@@ -182,7 +177,7 @@ void oscEvent(OscMessage message)
 
 
 
-void setVolume(SamplePlayer sp, long t, float ta, int N) {
+void setVolume(long t, float ta, int N) {
   float a = totalCurrAbs / N;
   println("Volume Neutral: time: " + t + " acceleration: " + a + " total: " + ta + " #samples: " + N);
   
@@ -190,4 +185,6 @@ void setVolume(SamplePlayer sp, long t, float ta, int N) {
   //TO DO: what is the maximum avg? 
   a /= thGain;
    
+  
+  
 }
