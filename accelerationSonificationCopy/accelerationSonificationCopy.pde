@@ -75,7 +75,7 @@ void setup() {
    song.setKillOnEnd(false);
    //noise.setKillOnEnd(false);
    
-   thGain = 30;
+   thGain = 60;
    // initialize our rateValue Glide object
    rateValue = new Glide(ac, 1, thGain);
    song.setRate(rateValue); 
@@ -95,7 +95,10 @@ void setup() {
    //ac.out.addInput(noiseGain);
    ac.start(); // begin audio processing
    println("music stuff initialized");
-
+   song.setPosition(000);
+   //gainValue.setValue(30);
+   song.start();
+   println("song started");
 }
 
 
@@ -132,9 +135,8 @@ void oscEvent(OscMessage message)
 {
   //Receiving only one per x messages; not to be stuck
   counter++;
-  if (counter > 100)
+  if (counter > 1)
   {
-    println("message received");
     counter = 0;
     if (message.checkAddrPattern("/fsensync/acc") == true)
     {
@@ -155,11 +157,10 @@ void oscEvent(OscMessage message)
       if (curr.time - oldTimes > 1000) {
         oldTimes = curr.time;
         changed = true;
-        N = 0;
       }
 
       if (changed) {
-        setVolume(song, curr.time, totalCurrAbs, N);
+        setVolume(curr.time, totalCurrAbs, N);
         totalCurrAbs = 0;
         N=0;
       }
@@ -183,12 +184,12 @@ void oscEvent(OscMessage message)
 
 
 
-void setVolume(SamplePlayer sp, long t, float ta, int N) {
+void setVolume(long t, float ta, int N) {
   float a = totalCurrAbs / N;
   println("Volume Neutral: time: " + t + " acceleration: " + a + " total: " + ta + " #samples: " + N);
   
   // normalize
   //TO DO: what is the maximum avg? 
-  a /= thGain;
-   
+  
+   gainValue.setValue(int(a));
 }
