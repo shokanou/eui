@@ -171,7 +171,7 @@ void oscEvent(OscMessage message)
       //get total acceleration for current data by adding the abs acc of each AccelerationSample together
       float currAbs = (float)Math.sqrt((curr.x * curr.x) + (curr.y * curr.y) + (curr.z * curr.z)); 
       totalCurrAbs += currAbs;
-      N++;
+      N+=1;
       
       myLock.unlock();
       
