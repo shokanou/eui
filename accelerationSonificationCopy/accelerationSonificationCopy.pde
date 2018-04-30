@@ -18,6 +18,8 @@ Glide gainValue;
 Glide rateValue;
 Glide noiseValue;
 
+int thGain;
+
 ArrayList<ArrayList<AccelerationSample>> dataList;
 ArrayList<Integer> dataId;
 MyLock myLock;
@@ -71,15 +73,17 @@ void setup() {
    // play the sample multiple times
    song.setKillOnEnd(false);
    noise.setKillOnEnd(false);
+   
+   thGain = 30;
    // initialize our rateValue Glide object
-   rateValue = new Glide(ac, 1, 30);
+   rateValue = new Glide(ac, 1, thGain);
    song.setRate(rateValue); 
    // creating a gain that will control the volume of our sample player
-   gainValue = new Glide(ac, 0.0, 30);
+   gainValue = new Glide(ac, 0.0, thGain);
    sampleGain = new Gain(ac, 1, gainValue);
    sampleGain.addInput(song);
    // creating a gain that will control the volume of noise
-   noiseValue = new Glide(ac, 0.0, 30);
+   noiseValue = new Glide(ac, 0.0, thGain);
    noiseGain = new Gain(ac, 1, noiseValue);
    noiseGain.addInput(noise);
    // connect Gains to the AudioContext
@@ -173,7 +177,14 @@ void oscEvent(OscMessage message)
 
 
 
-void setVolume(SamplePlayer, long t, float ta, int N) {
+void setVolume(SamplePlayer sp, long t, float ta, int N) {
   float a = totalCurrAbs / N;
   println("Volume Neutral: time: " + t + " acceleration: " + a + " total: " + ta + " #samples: " + N);
+  
+  // normalize
+  //TO DO: what is the maximum avg? 
+  a /= thGain;
+   
+  
+  
 }
