@@ -3,30 +3,30 @@ import netP5.*;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-
-// Minim
-import ddf.minim.*;
-import ddf.minim.ugens.*;
-
-Minim       minim;
-AudioOutput out;
-// Minim
+import beads.*;
 
 OscP5 oscP5;
 OscMessage myMessage;
 OscP5 multicastOsc;
 
+AudioContext ac;
+SamplePlayer song;
+SamplePlayer noise;
+Gain sampleGain;
+Gain noiseGain;
+Glide gainValue;
+Glide rateValue;
+Glide noiseValue;
+
 ArrayList<ArrayList<AccelerationSample>> dataList;
 ArrayList<Integer> dataId;
-
 MyLock myLock;
 ArrayList<AccelerationSample> inputBuffer;
+
 
 float plottedMs = 15000.0;
 float accMult = 2.0;
 
-//int hack = 0;
-//int hack2 = 0;
 float totalCurrAbs = 0;
 int N = 0;
 
@@ -34,16 +34,11 @@ int counter = 0;
 long oldAbs = 0;
 long oldTimes = 0;
 
+
+
 void setup() {
   size(1200, 600,P3D);
   frameRate(30);
-  
-  // Minim init
-  minim = new Minim(this);
- 
-  // use the getLineOut method of the Minim object to get an AudioOutput object
-  out = minim.getLineOut();
-  // Minim init end
 
   // The following is needed for Macs to get the Multicast
   System.setProperty("java.net.preferIPv4Stack" , "true");
@@ -56,7 +51,44 @@ void setup() {
 
   oscP5 = new OscP5(this, 7018);
   initializeReceiving();
+  
+  // UPLOADING SONG FILE
+  ac = new AudioContext();
+  try {
+    song = new SamplePlayer(ac, new Sample("/Users/Mary/Documents/eui/wizard/mgmt.mp3"));
+    noise = new SamplePlayer(ac, new Sample("/Users/Mary/Documents/eui/wizard/toto.mp3"));
+    println("Song uploaded");
+  }
+  catch(Exception e)
+  {
+     // if there is an error, show an error message
+     println("Exception while attempting to load sample.");
+     e.printStackTrace();
+     exit();
+   }
+   
+   // FOR MUSIC CONTROL
+   // play the sample multiple times
+   song.setKillOnEnd(false);
+   noise.setKillOnEnd(false);
+   // initialize our rateValue Glide object
+   rateValue = new Glide(ac, 1, 30);
+   song.setRate(rateValue); 
+   // creating a gain that will control the volume of our sample player
+   gainValue = new Glide(ac, 0.0, 30);
+   sampleGain = new Gain(ac, 1, gainValue);
+   sampleGain.addInput(song);
+   // creating a gain that will control the volume of noise
+   noiseValue = new Glide(ac, 0.0, 30);
+   noiseGain = new Gain(ac, 1, noiseValue);
+   noiseGain.addInput(noise);
+   // connect Gains to the AudioContext
+   ac.out.addInput(sampleGain);
+   ac.out.addInput(noiseGain);
+   ac.start(); // begin audio processing
 }
+
+
 
 void draw() {
   background(0);
@@ -71,14 +103,24 @@ void draw() {
   text("abs", 10, (height * 0.75) + tSize);
 }
 
+
+
 void initializeReceiving()
 {
   multicastOsc = new OscP5(this, "239.98.98.1", 10333, OscP5.MULTICAST);
 }
 
+void startPlaying()
+{
+  song.start();
+  noise.start();
+}
+
+
 /* incoming osc message are forwarded to the oscEvent method. */
 void oscEvent(OscMessage message)
 {
+  //Receiving only one per x messages; not to be stuck
   counter++;
   if (counter > 100)
   {
@@ -103,11 +145,11 @@ void oscEvent(OscMessage message)
       if (curr.time - oldTimes > 1000) {
         oldTimes = curr.time;
         changed = true;
+        N = 0;
       }
 
       if (changed) {
-        float avgCurrAbs = totalCurrAbs / N;
-        volumeAvg(curr.time, avgCurrAbs);
+        setVolume(song, curr.time, totalCurrAbs, N);
         totalCurrAbs = 0;
         N=0;
       }
@@ -130,6 +172,8 @@ void oscEvent(OscMessage message)
 }
 
 
-void volumeAvg(long t, float a) {
-  println("Volume Neutral: time: " + t + " acceleration: " + a);
+
+void setVolume(SamplePlayer, long t, float ta, int N) {
+  float a = totalCurrAbs / N;
+  println("Volume Neutral: time: " + t + " acceleration: " + a + " total: " + ta + " #samples: " + N);
 }
