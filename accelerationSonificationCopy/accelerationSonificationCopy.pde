@@ -57,8 +57,9 @@ void setup() {
   // UPLOADING SONG FILE
   ac = new AudioContext();
   try {
-    song = new SamplePlayer(ac, new Sample("/mgmt.mp3"));
-    noise = new SamplePlayer(ac, new Sample("~/toto.mp3"));
+    println("tried to upload");
+    song = new SamplePlayer(ac, new Sample("/Users/VilleVartiainen/Documents/lipasto/emergent/eui/accelerationSonificationCopy/mgmt.mp3"));
+    //noise = new SamplePlayer(ac, new Sample("/Users/VilleVartiainen/Documents/lipasto/emergent/eui/accelerationSonificationCopy/toto.mp3"));
     println("Song uploaded");
   }
   catch(Exception e)
