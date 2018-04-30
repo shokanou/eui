@@ -40,7 +40,7 @@ long oldTimes = 0;
 
 void setup() {
   oscP5 = new OscP5(this, 7018);
-  initializeReceiving();
+  
   size(1200, 600,P3D);
   frameRate(30);
 
@@ -58,7 +58,7 @@ void setup() {
   ac = new AudioContext();
   try {
     println("tried to upload");
-    song = new SamplePlayer(ac, new Sample("/Users/VilleVartiainen/Documents/lipasto/emergent/eui/accelerationSonificationCopy/mgmt.mp3"));
+    song = new SamplePlayer(ac, new Sample("/Users/VilleVartiainen/Documents/lipasto/emergent/eui/accelerationSonificationCopy/toto.mp3"));
     //noise = new SamplePlayer(ac, new Sample("/Users/VilleVartiainen/Documents/lipasto/emergent/eui/accelerationSonificationCopy/toto.mp3"));
     println("Song uploaded");
   }
@@ -75,9 +75,9 @@ void setup() {
    song.setKillOnEnd(false);
    //noise.setKillOnEnd(false);
    
-   thGain = 60;
+   thGain = 30;
    // initialize our rateValue Glide object
-   rateValue = new Glide(ac, 1, thGain);
+   rateValue = new Glide(ac, 0.5, thGain);
    song.setRate(rateValue); 
    // creating a gain that will control the volume of our sample player
    gainValue = new Glide(ac, 0.0, thGain);
@@ -96,9 +96,12 @@ void setup() {
    ac.start(); // begin audio processing
    println("music stuff initialized");
    song.setPosition(000);
-   //gainValue.setValue(30);
+   gainValue.setValue(30);
    song.start();
    println("song started");
+   
+   
+  initializeReceiving();
 }
 
 
@@ -135,7 +138,7 @@ void oscEvent(OscMessage message)
 {
   //Receiving only one per x messages; not to be stuck
   counter++;
-  if (counter > 1)
+  if (counter > 5)
   {
     counter = 0;
     if (message.checkAddrPattern("/fsensync/acc") == true)
@@ -160,7 +163,7 @@ void oscEvent(OscMessage message)
       }
 
       if (changed) {
-        setVolume(curr.time, totalCurrAbs, N);
+        setThatThingy(curr.id, curr.time, totalCurrAbs, N);
         totalCurrAbs = 0;
         N=0;
       }
@@ -184,12 +187,19 @@ void oscEvent(OscMessage message)
 
 
 
-void setVolume(long t, float ta, int N) {
+void setThatThingy(int id, long t, float ta, int N) {
   float a = totalCurrAbs / N;
-  println("Volume Neutral: time: " + t + " acceleration: " + a + " total: " + ta + " #samples: " + N);
+  println("setThatThingy time: " + t + " acceleration: " + a + " total: " + ta + " #samples: " + N);
   
   // normalize
-  //TO DO: what is the maximum avg? 
-  
-   gainValue.setValue(int(a));
+  float bla = a/40 + 0.2;
+  bla = int(bla*100);
+  bla = bla/100;
+  if(id == 0)
+    gainValue.setValue(bla);
+  else if (id == 1) 
+    rateValue.setValue(bla);
+  else 
+    noiseValue.setValue(1-bla);
+  println("setValue" + bla);
 }
