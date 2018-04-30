@@ -44,7 +44,7 @@ long oldTime = 0;
 void setup() {
   oscP5 = new OscP5(this, 7018);
   
-  size(1200, 600,P3D);
+//  size(1200, 600,P3D);
   frameRate(30);
 
   // The following is needed for Macs to get the Multicast
@@ -142,7 +142,7 @@ void oscEvent(OscMessage message)
 {
   //Receiving only one per x messages; not to be stuck
   counter++;
-  if (counter > 10)
+  //if (counter > 1)
   {
     counter = 0;
     if (message.checkAddrPattern("/fsensync/acc") == true)
@@ -171,7 +171,7 @@ void oscEvent(OscMessage message)
           
           // Compare curr.time with oldTimes, if difference is greater than 0.5 seconds, start new period
           if (curr.time - oldTimes.get(listInd) > 1000) {
-            oldTimes.set(listInd, int(curr.time));
+            oldTimes.set(listInd, curr.time);
             setThatThingy(curr.id, curr.time, totalAccs.get(listInd), totalNs.get(listInd));
             totalAccs.set(listInd, 0.0);
             totalNs.set(listInd, 0);
@@ -211,7 +211,7 @@ void oscEvent(OscMessage message)
 
 void setThatThingy(int id, long t, float ta, int N) {
   float a = totalCurrAbs / N;
-  println("setThatThingy time: " + t + " acceleration: " + a + " total: " + ta + " #samples: " + N);
+  println("setThatThingy id: " + id + " acceleration: " + a + " total: " + ta + " #samples: " + N);
   
   // normalize
   float bla = a/40 + 0.2;
@@ -223,5 +223,5 @@ void setThatThingy(int id, long t, float ta, int N) {
     rateValue.setValue(bla);
   else 
     noiseValue.setValue(1-bla);
-  println("setValue" + bla);
+ // println("setValue" + bla);
 }
