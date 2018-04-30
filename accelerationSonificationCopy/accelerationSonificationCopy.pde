@@ -39,6 +39,8 @@ long oldTimes = 0;
 
 
 void setup() {
+  oscP5 = new OscP5(this, 7018);
+  initializeReceiving();
   size(1200, 600,P3D);
   frameRate(30);
 
@@ -51,8 +53,6 @@ void setup() {
   dataList = new ArrayList<ArrayList<AccelerationSample>>();
   dataId = new ArrayList<Integer>();
 
-  oscP5 = new OscP5(this, 7018);
-  initializeReceiving();
   
   // UPLOADING SONG FILE
   ac = new AudioContext();
@@ -69,7 +69,6 @@ void setup() {
      e.printStackTrace();
      exit();
    }
-   
    // FOR MUSIC CONTROL
    // play the sample multiple times
    println("Song uploaded - after try");
@@ -95,6 +94,8 @@ void setup() {
    ac.out.addInput(sampleGain);
    //ac.out.addInput(noiseGain);
    ac.start(); // begin audio processing
+   println("music stuff initialized");
+
 }
 
 
