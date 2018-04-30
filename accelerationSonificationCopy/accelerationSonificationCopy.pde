@@ -33,7 +33,7 @@ float totalCurrAbs = 0;
 ArrayList<Float> totalAccs;
 int N = 0;
 ArrayList<Integer> totalNs;
-ArrayList<Integer> oldTimes;
+ArrayList<Long> oldTimes;
 
 int counter = 0;
 long oldAbs = 0;
@@ -57,6 +57,7 @@ void setup() {
   dataId = new ArrayList<Integer>();
   totalAccs = new ArrayList<Float>();
   totalNs = new ArrayList<Integer>(); 
+  oldTimes = new ArrayList<Long>(); 
   
   // UPLOADING SONG FILE
   ac = new AudioContext();
@@ -141,11 +142,12 @@ void oscEvent(OscMessage message)
 {
   //Receiving only one per x messages; not to be stuck
   counter++;
-  if (counter > 5)
+  if (counter > 10)
   {
     counter = 0;
     if (message.checkAddrPattern("/fsensync/acc") == true)
     {
+
       int appId = message.get(0).intValue();
       String tags = message.get(1).stringValue();
       int packetNumber = message.get(2).intValue();
@@ -156,7 +158,7 @@ void oscEvent(OscMessage message)
   
       myLock.lock();
       AccelerationSample curr = new AccelerationSample(x, y, z, appId, timeStamp);
-     float currAbs = (float)Math.sqrt((curr.x * curr.x) + (curr.y * curr.y) + (curr.z * curr.z)); 
+      float currAbs = (float)Math.sqrt((curr.x * curr.x) + (curr.y * curr.y) + (curr.z * curr.z)); 
       
       // CHECKING IF WE HAVE ALREADY THE ID
       boolean found = false;
@@ -178,14 +180,16 @@ void oscEvent(OscMessage message)
           currAbs += totalAccs.get(listInd);
           totalAccs.set(listInd, currAbs);
           N = totalNs.get(listInd);
-          totalNs.et(listInd, N+1);
+          totalNs.set(listInd, N+1);
         }
       }
+      
       if (!found)
       {
         dataId.add(curr.id);
         totalAccs.add(currAbs);
         totalNs.add(0);
+        oldTimes.add(curr.time);
       }
           
       boolean changed = false;
